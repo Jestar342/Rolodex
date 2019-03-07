@@ -1,0 +1,120 @@
+﻿@using Microsoft.AspNetCore.Mvc
+@using Rolodex.Web.Controllers
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rolodex</title>
+    
+    <style type="text/css">
+        * {
+            font-family: Tahoma;
+        }
+
+        table {
+            border: 1px solid lightgray;
+        }
+
+        tr:nth-child(even) {
+            background-color: lightcyan;
+        }
+    </style>
+
+    <script src="~/js/vue.js" type="text/javascript"></script>
+    
+    <script type="text/javascript">
+        window.addEventListener("load",
+            function() {
+
+                var app = new Vue({
+                    el: '#app',
+                    data: {
+                        entries: null,
+                        newFirstNames: null,
+                        newSurname: null,
+                        newCompany: null,
+                        newEmailAddress: null,
+                        newTelephoneNumber: null
+                    },
+                    methods: {
+                        getEntries: function() {
+                            fetch('@(Url.Action("AllEntries", "EntriesApi"))')
+                                .then(function(data) {
+                                    this.entries = data;
+                                });
+                        },
+                        clearNewEntry: function() {
+                            this.newFirstNames = null;
+                            this.newSurname = null;
+                            this.newCompany = null;
+                            this.newEmailAddress = null;
+                            this.newTelephoneNumber = null;
+                        },
+                        addNew: function(event) {
+                            event.preventDefault();
+                            fetch('@Url.Action("AddNew", "EntriesApi")',
+                                    {
+                                        method: 'post',
+                                        headers: {
+                                            'Accept': 'application/json, text/plain, */*',
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                            newFirstNames: this.newFirstNames,
+                                            newSurname: this.newSurname,
+                                            newCompany: this.newCompany,
+                                            newEmailAddress: this.newEmailAddress,
+                                            newTelephoneNumber: this.newTelephoneNumber
+                                        })
+                                    })
+                                .then(function() {
+                                    this.clearNewEntry();
+                                })
+                                .then(function() {
+                                    setTimeout(this.getEntries, 500);
+                                });
+                        }
+                    }
+                });
+
+                app.getEntries();
+            });
+    </script>
+
+</head>
+
+<body>
+<div id="app">
+    <form v-on:submit="addNew">
+        <input placeholder="New First Name(s)" v-model="newFirstNames"/>
+        <input placeholder="New Surname" v-model="newSurname"/>
+        <input placeholder="New Company" v-model="newCompany"/>
+        <input placeholder="New EmailAddress" v-model="newEmailAddress"/>
+        <input placeholder="New TelephoneNumber" v-model="newTelephoneNumber"/>
+        <button type="submit">Add New</button>
+    </form>
+    <button type="button" v-on:click="getEntries">Refresh</button>
+    <table>
+        <thead>
+        <tr>
+            <th>Id</th>
+            <th>First Name(s)</th>
+            <th>Surname</th>
+            <th>Company</th>
+            <th>Email Address</th>
+            <th>Telephone Number</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="entry in entries">
+            <td>{{entry.EntityId}}</td>
+            <td>{{entry.FirstNames}}</td>
+            <td>{{entry.Surname}}</td>
+            <td>{{entry.Company}}</td>
+            <td>{{entry.EmailAddress}}</td>
+            <td>{{entry.TelephoneNumber}}</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
